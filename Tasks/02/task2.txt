@@ -1,0 +1,277 @@
+1. GOAL
+-------
+Write a hand-written tokenizer for the language described below.
+It reads the file named by the first command-line argument and prints
+every token, followed by a list of errors.
+
+- C/C++ is preferred. Any language is accepted.
+- Not allowed: regex libraries, lex/flex, strtok, split-style shortcuts.
+  Scan the input character by character.
+- Always take the longest valid token (maximal munch).
+
+
+2. OUTPUT FORMAT (compared exactly)
+-----------------------------------
+<line>:<col> <TYPE> <lexeme>
+<line>:<col> <TYPE> <lexeme>
+--- ERRORS ---
+<line>:<col> <KIND> [<lexeme>]
+
+- Print all tokens first, then the line "--- ERRORS ---", then the
+  errors in the order they occur.
+- If there are no errors, print "(none)" after "--- ERRORS ---".
+- Whitespace is never printed.
+
+
+3. POSITIONS
+------------
+- Line and column are 1-based and refer to the FIRST character of the
+  lexeme.
+- A tab character counts as ONE column. A carriage return (\r) is treated as
+  whitespace and is not counted.
+- Skipped characters (whitespace, invalid characters) still advance the
+  line and column count.
+
+
+4. TOKENS FOR THIS TASK
+-----------------------
+KEYWORD  =: 'if' | 'else' | 'while' | 'for' | 'return' | 'int' | 'float' -> reserved words, case-sensitive ("While" is an IDENT).
+IDENT    =: [A-Za-z_][A-Za-z0-9_]* -> a letter or '_', then letters, digits or '_'. Read the whole word first, then check if it is a KEYWORD ("iff" and "integer" are IDENTs).
+EQ       =: '=='
+NEQ      =: '!='
+LE       =: '<='
+GE       =: '>='
+LT       =: '<'
+GT       =: '>'
+ASSIGN   =: '='
+NOT      =: '!'
+AND      =: '&&'
+OR       =: '||'
+SEMI     =: ';'
+COMMA    =: ','
+LBRACE   =: '{'
+RBRACE   =: '}'
+LBRACKET =: '['
+RBRACKET =: ']'
+
+Whitespace (space, tab, newline) separates tokens.
+Anything else is an INVALID_CHAR error.
+There are no numeric literals and no parentheses. A digit that does not
+continue an identifier is an INVALID_CHAR error.
+A single '&' or a single '|' is an INCOMPLETE_OPERATOR error.
+
+Maximal munch examples:
+  "==="  is EQ then ASSIGN        "!=="  is NEQ then ASSIGN
+  "=>"   is ASSIGN then GT        "<=="  is LE then ASSIGN
+
+
+5. ERROR RECOVERY RULES FOR THIS TASK
+-------------------------------------
+Rule 1. Never stop. Scan to the end of the file. Collect errors in a
+        list and print them after all tokens.
+
+Rule 2. Report the position where the bad lexeme STARTS. Keep counting
+        line and column over every character you skip.
+
+Rule 3. Invalid-character run. If a character cannot start any token,
+        report an INVALID_CHAR error and keep consuming the following
+        characters that also cannot start a token. Report the whole run
+        as ONE error. Whitespace, or a character that can start a valid
+        token, ends the run.
+        Example,
+        input:     x ?$ b 9lives
+        output:
+        Line:Col Token               Lexeme
+        1:1      IDENT               x
+        1:6      IDENT               b
+        1:9      IDENT               lives
+        --- ERRORS ---
+        1:3      INVALID_CHAR        [?$]
+        1:8      INVALID_CHAR        [9]
+        --- end ---
+        ("9" is invalid, and the run stops because "l" starts an IDENT.)
+
+Rule 4. Incomplete operator. A single '&' or '|' is reported as
+        INCOMPLETE_OPERATOR. Skip only that one character. Never merge
+        it with neighbouring characters.
+        Example,
+        input:     a & b
+        output:
+        Line:Col Token               Lexeme
+        1:1      IDENT               a
+        1:5      IDENT               b
+        --- ERRORS ---
+        1:3      INCOMPLETE_OPERATOR [&]
+        --- end ---
+
+Rule 5. A lexeme that caused an error produces no token. Never report
+        the same text twice.
+
+
+6. BUFFERED INPUT
+--------------------------
+Read the input through a buffered reader with two functions:
+  advance()  consume and return the next character
+  peek(k)    look k characters ahead WITHOUT consuming (k = 0, 1, ...)
+The scanner must not look at the file any other way.
+
+
+7. CODE STRUCTURE
+--------------------------
+- Code must be properly indented
+- Code should not contain any unnecessary spaces or newlines
+- Each code fragment should be properly spaced. Example: 'a = 3 + 4', 'for (int i = 0; i < N; ++i) {' etc.
+
+
+8. TEST CASES
+-------------
+Save each input to a file, run your program on it, and compare with the
+expected output exactly (use diff).
+Note: In Test 2.5, lines 2, 3 and 4 begin with 4, 8 and 4 spaces.
+
+TEST 2.1
+Input:
+if a <= b { return a; } else { return b; }
+
+Expected output:
+1:1 KEYWORD if
+1:4 IDENT a
+1:6 LE <=
+1:9 IDENT b
+1:11 LBRACE {
+1:13 KEYWORD return
+1:20 IDENT a
+1:21 SEMI ;
+1:23 RBRACE }
+1:25 KEYWORD else
+1:30 LBRACE {
+1:32 KEYWORD return
+1:39 IDENT b
+1:40 SEMI ;
+1:42 RBRACE }
+--- ERRORS ---
+(none)
+--- end ---
+
+TEST 2.2
+Input:
+int integer, floats_2, _x;
+While while For for
+
+Expected output:
+1:1 KEYWORD int
+1:5 IDENT integer
+1:12 COMMA ,
+1:14 IDENT floats_2
+1:22 COMMA ,
+1:24 IDENT _x
+1:26 SEMI ;
+2:1 IDENT While
+2:7 KEYWORD while
+2:13 IDENT For
+2:17 KEYWORD for
+--- ERRORS ---
+(none)
+--- end ---
+
+TEST 2.3
+Input:
+a==b!=c<=d>=e<f>g=!h&&i||j===k
+
+Expected output:
+1:1 IDENT a
+1:2 EQ ==
+1:4 IDENT b
+1:5 NEQ !=
+1:7 IDENT c
+1:8 LE <=
+1:10 IDENT d
+1:11 GE >=
+1:13 IDENT e
+1:14 LT <
+1:15 IDENT f
+1:16 GT >
+1:17 IDENT g
+1:18 ASSIGN =
+1:19 NOT !
+1:20 IDENT h
+1:21 AND &&
+1:23 IDENT i
+1:24 OR ||
+1:26 IDENT j
+1:27 EQ ==
+1:29 ASSIGN =
+1:30 IDENT k
+--- ERRORS ---
+(none)
+--- end ---
+
+TEST 2.4
+Input:
+x = y & z | w;
+a ?$ b 9lives
+
+Expected output:
+1:1 IDENT x
+1:3 ASSIGN =
+1:5 IDENT y
+1:9 IDENT z
+1:13 IDENT w
+1:14 SEMI ;
+2:1 IDENT a
+2:6 IDENT b
+2:9 IDENT lives
+--- ERRORS ---
+1:7 INCOMPLETE_OPERATOR [&]
+1:11 INCOMPLETE_OPERATOR [|]
+2:3 INVALID_CHAR [?$]
+2:8 INVALID_CHAR [9]
+--- end ---
+
+TEST 2.5
+Input:
+while i < n {
+    if arr[i] >= max && !found {
+        max = arr[i];
+    }
+}
+
+Expected output:
+1:1 KEYWORD while
+1:7 IDENT i
+1:9 LT <
+1:11 IDENT n
+1:13 LBRACE {
+2:5 KEYWORD if
+2:8 IDENT arr
+2:11 LBRACKET [
+2:12 IDENT i
+2:13 RBRACKET ]
+2:15 GE >=
+2:18 IDENT max
+2:22 AND &&
+2:25 NOT !
+2:26 IDENT found
+2:32 LBRACE {
+3:9 IDENT max
+3:13 ASSIGN =
+3:15 IDENT arr
+3:18 LBRACKET [
+3:19 IDENT i
+3:20 RBRACKET ]
+3:21 SEMI ;
+4:5 RBRACE }
+5:1 RBRACE }
+--- ERRORS ---
+(none)
+--- end ---
+
+
+9. GRADING (100 points)
+-----------------------
+Test cases ............................................... 40
+    8 points per test, exact output match
+Code structure ........................................... 15
+Line/column tracking ..................................... 10
+Error reporting and recovery ............................. 20
+Buffered input ........................................... 15

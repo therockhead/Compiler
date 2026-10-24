@@ -1,0 +1,49 @@
+Write three hand-written tokenizers, one per task. Each task has its own language and token rules.
+Task 1 Arithmetic tokens (easy)
+Task 2 Paren-free statements: keywords, identifiers, operators (medium)
+Task 3 Strings, chars, hex/binary, nested comments, annotations (hard)
+Files attached: task1.txt, task2.txt, task3.txt, report_template.tex.
+Each task file has the token rules, output format, error-recovery
+rules, 5 test cases with exact expected output, and the grading rules.
+ 
+HOW TO APPROACH EACH TASK
+1. Read the whole task file first. Output format and error rules are
+compared exactly.
+2. Before coding, draw a transition diagram for every token class
+(Dragon Book 3.4) and decide how many characters of lookahead you
+need.
+3. Build in this order:
+a) buffered reader (advance/peek), then position tracking (line:col)
+b) valid tokens, then maximal munch
+c) error detection, then error recovery
+4. Run the 5 given tests and compare your output against the expected
+output. Then write your own edge cases: empty file, no trailing
+newline, only errors, file ending inside a string or comment.
+5. Do the tasks in order. Ideas carry over, tokens do not.
+ 
+RULES
+- C/C++ preferred, any language allowed.
+- Hand-written scanners only. No regex libraries, lex/flex, strtok or
+split-style shortcuts.
+- Your program will take input from a file given as an arguments from the command line (e.g., ./task1 input.txt).
+- Work individually. Copied code gets zero for all tasks. AI usage will be heavily penalized.
+- Mark weighting: [e.g., Task 1 = 20%, Task 2 = 30%, Task 3 = 50%]
+ 
+HOW TO SUBMIT (one zip file, uploaded here before the deadline)
+Name: <StudentID>_<FullName>_Tokenizer.zip (e.g., 230999_Raihan_Kabir_Tokenizer.zip)
+Contents:
+task1.cpp
+task2.cpp
+task3.cpp
+report.pdf compiled from report_template.tex, including the title
+page, with your name, ID and the date filled in
+Do not include compiled binaries.
+Your program must run as: ./task1 input.txt
+ 
+Questions: post them in the comments below, not by message, so
+everyone sees the answers.
+
+Here's the link to the overleaf template: https://www.overleaf.com/project/6ad316a63d7610b1cd15c8b3/share#72c040c410e23d13f38440344900658b88358e686f2dfbaf
+I have attached the report_template.tex file as well for your convenience.
+From now on, you will be using this template for each assignment I assign.
+Do not use this template for other course assignments, unless your course teacher allows you to.

@@ -1,0 +1,50 @@
+MODERATE LEVEL — Variable Assignments & Expressions
+=====================================================
+Operators used: =, +=, -=, *=, /=
+Each exercise declares variables, combines them with expressions,
+and ends with a print() statement. These mirror the same
+calculations as the Easy-level exercises, one level higher.
+
+--------------------------------------------------
+Exercise 1 — Basic arithmetic
+--------------------------------------------------
+a = 8
+b = a + 12
+b *= -5
+print(b)
+
+--------------------------------------------------
+Exercise 2 — GC content (percentage)
+--------------------------------------------------
+gc_count = 45
+total_len = 100
+gc_percent = gc_count / total_len
+gc_percent *= 100
+print(gc_percent)
+
+--------------------------------------------------
+Exercise 3 — Trimmed sequence length
+--------------------------------------------------
+raw_len = 150
+adapter_len = 12
+trimmed_len = raw_len - adapter_len
+print(trimmed_len)
+
+--------------------------------------------------
+Exercise 4 — Sequencing coverage
+--------------------------------------------------
+reads = 500
+read_len = 100
+genome_len = 1000
+coverage = reads * read_len
+coverage /= genome_len
+print(coverage)
+
+--------------------------------------------------
+Exercise 5 — Protein length from coding sequence
+--------------------------------------------------
+seq_len = 300
+codons = seq_len / 3
+protein_len = codons
+protein_len -= 1
+print(protein_len)

@@ -1,0 +1,201 @@
+1. GOAL
+-------
+Write a hand-written tokenizer for the tiny language described below.
+It reads the file named by the first command-line argument and prints
+every token, followed by a list of errors.
+
+- C/C++ is preferred. Any language is accepted.
+- Not allowed: regex libraries, lex/flex, strtok, split-style shortcuts.
+  Scan the input character by character.
+- Always take the longest valid token (maximal munch).
+
+
+2. OUTPUT FORMAT (compared exactly)
+-----------------------------------
+<line>:<col> <TYPE> <lexeme>
+<line>:<col> <TYPE> <lexeme>
+--- ERRORS ---
+<line>:<col> <KIND> [<lexeme>]
+
+- Print all tokens first, then the line "--- ERRORS ---", then the
+  errors in the order they occur.
+- If there are no errors, print "(none)" after "--- ERRORS ---".
+- Whitespace is never printed.
+
+
+3. POSITIONS
+------------
+- Line and column are 1-based and refer to the FIRST character of the
+  lexeme.
+- A tab character counts as ONE column. A carriage return (\r) is treated as
+  whitespace and is not counted.
+- Skipped characters (whitespace, invalid characters) still advance the
+  line and column count.
+
+
+4. TOKENS FOR THIS TASK
+-----------------------
+INT      =: [0-9]+ -> one or more digits. Leading zeros are allowed (007 is an INT).
+FLOAT    =: [0-9]+.[0-9]+ -> digits, then '.', then at least one digit (3.14).
+PLUS     =: '+'        
+MINUS    =: '-'   
+STAR     =: '*'        
+SLASH    =: '/'
+PERCENT  =: '%'        
+CARET    =: '^'        
+LPAREN   =: '('        
+RPAREN   =: ')'
+
+Whitespace (space, tab, newline) separates tokens.
+Anything else is an INVALID_CHAR error.
+Any letter, '=', '$', or '.' outside a FLOAT is an INVALID_CHAR error.
+
+
+5. ERROR RECOVERY RULES FOR THIS TASK
+-------------------------------------
+Rule 1. Never stop. Scan to the end of the file. Collect errors in a
+        list and print them after all tokens.
+
+Rule 2. Report the position where the bad lexeme STARTS. Keep counting
+        line and column over every character you skip.
+
+Rule 3. Invalid-character run. If a character cannot start any token,
+        report an INVALID_CHAR error and keep consuming the following
+        characters that also cannot start a token. Report the whole run
+        as ONE error. Whitespace, or a character that can start a valid
+        token, ends the run.
+        Example, 
+        input:     3 ~~ + @4
+        output:
+        Line:Col Token        Lexeme
+        1:1      INT          3
+        1:6      PLUS         +
+        1:9      INT          4
+        --- ERRORS ---
+        1:3      INVALID_CHAR [~~]
+        1:8      INVALID_CHAR [@]
+        --- end ---
+
+Rule 4. A lexeme that caused an error produces no token. Never report
+        the same text twice.
+
+
+6. BUFFERED INPUT
+--------------------------
+Read the input through a buffered reader with two functions:
+  advance()  consume and return the next character
+  peek()     look at the next character WITHOUT consuming it
+The scanner must not look at the file any other way.
+
+
+7. CODE STRUCTURE
+--------------------------
+- Code must be properly indented
+- Code should not contain any unnecessary spaces or newlines
+- Each code fragement should be properly spaced. Example: 'a = 3 + 4', 'for (int i = 0; i < N; ++i) {' etc.
+
+8. TEST CASES
+-------------
+Save each input to a file, run your program on it, and compare with the
+expected output exactly (use diff). 
+Note: In Test 1.3, line 2 begins with two spaces.
+
+TEST 1.1
+Input:
+2 + 4
+
+Expected output:
+1:1 INT 2
+1:3 PLUS +
+1:5 INT 4
+--- ERRORS ---
+(none)
+--- end ---
+
+TEST 1.2
+Input:
+(3.14 * 2) ^ 2 - 10 / 4 % 3
+
+Expected output:
+1:1 LPAREN (
+1:2 FLOAT 3.14
+1:7 STAR *
+1:9 INT 2
+1:10 RPAREN )
+1:12 CARET ^
+1:14 INT 2
+1:16 MINUS -
+1:18 INT 10
+1:21 SLASH /
+1:23 INT 4
+1:25 PERCENT %
+1:27 INT 3
+--- ERRORS ---
+(none)
+--- end ---
+
+TEST 1.3
+Input:
+12 +
+  007*(8)
+
+Expected output:
+1:1 INT 12
+1:4 PLUS +
+2:3 INT 007
+2:6 STAR *
+2:7 LPAREN (
+2:8 INT 8
+2:9 RPAREN )
+--- ERRORS ---
+(none)
+--- end ---
+
+TEST 1.4
+Input:
+3.14.5 + .5
+
+Expected output:
+1:1 FLOAT 3.14
+1:6 INT 5
+1:8 PLUS +
+1:11 INT 5
+--- ERRORS ---
+1:5 INVALID_CHAR [.]
+1:10 INVALID_CHAR [.]
+--- end ---
+
+TEST 1.5
+Input:
+(1 + x2) * 3.
+y = 4 // 2 $$
+
+Expected output:
+1:1 LPAREN (
+1:2 INT 1
+1:4 PLUS +
+1:7 INT 2
+1:8 RPAREN )
+1:10 STAR *
+1:12 INT 3
+2:5 INT 4
+2:7 SLASH /
+2:8 SLASH /
+2:10 INT 2
+--- ERRORS ---
+1:6 INVALID_CHAR [x]
+1:13 INVALID_CHAR [.]
+2:1 INVALID_CHAR [y]
+2:3 INVALID_CHAR [=]
+2:12 INVALID_CHAR [$$]
+--- end ---
+
+
+9. GRADING (100 points)
+-----------------------
+Test cases ............................................... 50
+    10 points per test, exact output match
+Code structure ........................................... 15
+Line/column tracking ..................................... 15
+Error reporting and recovery ............................. 10
+Buffered input ........................................... 10

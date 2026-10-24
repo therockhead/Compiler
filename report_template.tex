@@ -1,0 +1,217 @@
+\documentclass[manuscript,oneside,10pt]{acmart}
+
+% ---------------------------------------------------------------------
+% ACM single-column formatting
+% ---------------------------------------------------------------------
+\settopmatter{printacmref=false}
+\setlength{\parindent}{1em}
+\setlength{\parskip}{0pt}
+\emergencystretch=1em
+\raggedbottom
+
+% Graphics
+\usepackage{graphicx}
+\usepackage{geometry}
+\geometry{
+  a4paper,
+  left=25mm,
+  right=25mm,
+  top=25mm,
+  bottom=25mm,
+  twoside=false
+}
+
+% ---------------------------------------------------------------------
+% Your details (edit these)
+% ---------------------------------------------------------------------
+\newcommand{\ReportTitle}{Hand-Written Tokenizers for Three Small Languages}
+\newcommand{\CourseCode}{CSM 3222}
+\newcommand{\CourseTitle}{Compiler}
+\newcommand{\FacultyName}{Faculty of Agricultural Engineering and Technology}
+\newcommand{\DeptName}{Computer Science and Mathematics}
+\newcommand{\SubmissionDate}{\today}
+
+% Submitted to
+\newcommand{\TeacherName}{Teacher's Full Name}
+\newcommand{\TeacherDesignation}{Designation}
+\newcommand{\TeacherDept}{\DeptName}
+
+% Submitted by
+\newcommand{\StudentName}{Your Full Name}
+\newcommand{\StudentID}{Student ID}
+\newcommand{\StudentSession}{Session}
+\newcommand{\StudentSemester}{Level / Semester}
+\newcommand{\StudentEmail}{your.email@example.com}
+
+% Writing prompts: delete them before submission
+\newcommand{\hint}[1]{{\small\itshape [Hint: #1]}}
+
+% University logo with a fallback box if the file is missing
+\newcommand{\bauLogo}{%
+  \IfFileExists{bau_logo.png}
+    {\includegraphics[height=2.6cm]{bau_logo.png}}
+    {%
+      \IfFileExists{bau_logo.pdf}
+        {\includegraphics[height=2.6cm]{bau_logo.pdf}}
+        {%
+          \IfFileExists{bau_logo.jpg}
+            {\includegraphics[height=2.6cm]{bau_logo.jpg}}
+            {%
+              \fbox{%
+                \parbox[c][2.6cm][c]{2.6cm}{%
+                  \centering\scriptsize
+                  Place\\ \texttt{bau\_logo.png}\\ here
+                }%
+              }%
+            }%
+        }%
+    }%
+}
+
+% ---------------------------------------------------------------------
+% ACM-style report title and author metadata
+% ---------------------------------------------------------------------
+\title{\ReportTitle}
+\subtitle{\CourseCode: \CourseTitle}
+
+\author{\StudentName}
+\affiliation{%
+  \institution{Bangladesh Agricultural University}
+  \department{Department of Computer Science and Mathematics}
+  \city{Mymensingh}
+  \country{Bangladesh}
+}
+\email{\StudentEmail}
+
+% ---------------------------------------------------------------------
+\begin{document}
+
+% =====================================================================
+% TITLE PAGE
+% =====================================================================
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+
+\vspace*{0.25in}
+\bauLogo\par
+
+\vspace{12pt}
+{\sffamily\bfseries\fontsize{22}{26}\selectfont
+Bangladesh Agricultural University\par}
+
+\vspace{4pt}
+{\large Mymensingh -- 2202, Bangladesh\par}
+{\large\DeptName\par}
+{\large\FacultyName\par}
+
+\vspace{16pt}
+% \rule{0.8\textwidth}{0.8pt}\par
+
+\vspace{22pt}
+\begin{minipage}[t]{0.85\textwidth}
+  \centering
+  {\sffamily\bfseries\fontsize{24}{30}\selectfont
+  \ReportTitle\par}
+\end{minipage}\par
+
+\vspace{18pt}
+{\sffamily\bfseries\large LAB ASSIGNMENT REPORT\par}
+
+\vspace{6pt}
+{\large\CourseCode: \CourseTitle\par}
+
+% \vspace{14pt}
+% \rule{0.8\textwidth}{0.8pt}\par
+
+\vfill
+
+\begin{minipage}[t]{0.46\textwidth}
+  \raggedright
+  {\sffamily\bfseries\large Submitted To\par}
+  \vspace{3pt}\hrule\vspace{8pt}
+  \textbf{\TeacherName}\\[2pt]
+  \TeacherDesignation\\[2pt]
+  \TeacherDept\\[2pt]
+  Bangladesh Agricultural University
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.46\textwidth}
+  \raggedleft
+  {\sffamily\bfseries\large Submitted By\par}
+  \vspace{3pt}\hrule\vspace{8pt}
+  \textbf{\StudentName}\\[2pt]
+  ID: \StudentID\\[2pt]
+  \StudentSemester, \StudentSession\\[2pt]
+  \DeptName\\[2pt]
+  Bangladesh Agricultural University
+\end{minipage}
+
+\par
+\vfill
+{\large Date of Submission: \SubmissionDate\par}
+\vspace{0.3in}
+
+\end{titlepage}
+
+% =====================================================================
+% MAIN REPORT: ACM SINGLE-COLUMN FORMAT
+% =====================================================================
+\setcounter{page}{1}
+\maketitle
+
+\section{Introduction}
+\hint{Describe the purpose of the assignment, the tasks completed,
+your general approach, and the organization of the report.}
+
+% ---------------------------------------------------------------------
+\section{Task 1: Arithmetic Tokens}
+
+\subsection{Design}
+\hint{List the token classes. Describe the decisions that require
+lookahead, e.g., how \texttt{3.14} is distinguished from
+\texttt{3.} and \texttt{.5}.}
+
+\subsection{Buffering and Positions}
+\hint{Explain how \texttt{advance()} and \texttt{peek()} work,
+and how line and column positions are updated.}
+
+\subsection{Error Recovery}
+\hint{Explain how invalid characters are grouped and where scanning
+resumes.}
+
+\subsection{Test Results}
+\hint{Include screenshots of the outputs for each test input.
+Crop each screenshot to show only the relevant output.}
+
+% ---------------------------------------------------------------------
+\section{Task 2: Parenthesis-Free Statements}
+
+\subsection{Design}
+
+\subsection{Buffering and Positions}
+
+\subsection{Error Recovery}
+
+\subsection{Test Results}
+
+% ---------------------------------------------------------------------
+\section{Task 3: Literals and Comments}
+
+\subsection{Design}
+
+\subsection{Two-Buffer Scheme}
+
+\subsection{Error Recovery}
+
+\subsection{Test Results}
+
+% ---------------------------------------------------------------------
+\section{Discussion}
+\hint{Discuss the hardest bugs, what lookahead or buffering taught
+Author’syou, and what you would change.}
+
+\section{Conclusion}
+\hint{Summarize the main takeaways from the assignment in three to five sentences.}
+
+\end{document}

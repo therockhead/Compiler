@@ -1,0 +1,53 @@
+EASY LEVEL — Stack Machine Instructions
+=========================================
+Instruction set used: PUSH, ADD, SUB, MULT, DIV, PRINT
+Each exercise pushes values onto a stack and combines them with
+arithmetic operations, ending with PRINT.
+
+--------------------------------------------------
+Exercise 1 — Basic arithmetic
+--------------------------------------------------
+PUSH 8
+PUSH 12
+ADD
+PUSH -5
+MULT
+PRINT
+
+--------------------------------------------------
+Exercise 2 — GC content (percentage)
+--------------------------------------------------
+PUSH 45
+PUSH 100
+DIV
+PUSH 100
+MULT
+PRINT
+
+--------------------------------------------------
+Exercise 3 — Trimmed sequence length
+--------------------------------------------------
+PUSH 150
+PUSH 12
+SUB
+PRINT
+
+--------------------------------------------------
+Exercise 4 — Sequencing coverage
+--------------------------------------------------
+PUSH 500
+PUSH 100
+MULT
+PUSH 1000
+DIV
+PRINT
+
+--------------------------------------------------
+Exercise 5 — Protein length from coding sequence
+--------------------------------------------------
+PUSH 300
+PUSH 3
+DIV
+PUSH 1
+SUB
+PRINT

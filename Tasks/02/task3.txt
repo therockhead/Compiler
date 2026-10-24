@@ -1,0 +1,282 @@
+1. GOAL
+-------
+Write a hand-written tokenizer for the language described below.
+It reads the file named by the first command-line argument and prints
+every token, followed by a list of errors.
+
+- C/C++ is preferred. Any language is accepted.
+- Not allowed: regex libraries, lex/flex, strtok, split-style shortcuts.
+  Scan the input character by character.
+- Always take the longest valid token (maximal munch).
+
+
+2. OUTPUT FORMAT (compared exactly)
+-----------------------------------
+<line>:<col> <TYPE> <lexeme>
+<line>:<col> <TYPE> <lexeme>
+--- ERRORS ---
+<line>:<col> <KIND> [<lexeme>]
+
+- Print all tokens first, then the line "--- ERRORS ---", then the
+  errors in the order they occur.
+- If there are no errors, print "(none)" after "--- ERRORS ---".
+- Whitespace and comments are never printed.
+- Lexemes are printed raw, exactly as written in the source (a STRING
+  keeps its quotes and backslashes).
+
+
+3. POSITIONS
+------------
+- Line and column are 1-based and refer to the FIRST character of the
+  lexeme.
+- A tab character counts as ONE column. A carriage return (\r) is treated as
+  whitespace and is not counted.
+- Skipped characters (whitespace, comments, invalid characters) still advance the
+  line and column count. A block comment may span many lines.
+
+
+4. TOKENS FOR THIS TASK
+-----------------------
+STRING   =: '"' ... '"' -> text between double quotes on the SAME line. Valid escapes: \n \t \\ \"
+CHAR     =: ''' c ''' -> one character, or one valid escape, between single quotes. Valid escapes: \n \t \\ \'
+HEX      =: 0x[0-9A-Fa-f]+ -> 0x followed by one or more hex digits (0xFF, 0x1f).
+BIN      =: 0b[01]+ -> 0b followed by one or more of 0 and 1 (0b1010).
+ANNOT    =: @[A-Za-z_][A-Za-z0-9_]* -> '@' immediately followed by a name (@version). The name stops at the first other character, so "@a@b" is two ANNOT tokens.
+SCOPE    =: '::'
+COLON    =: ':'
+ARROW    =: '->'
+DOT      =: '.'
+RANGE    =: '..'
+ELLIPSIS =: '...'
+
+"...." is ELLIPSIS then DOT. A lone '-' is NOT a token.
+
+Comments (skipped, no token):
+  '#' starts a line comment that runs to the end of the line.
+  '#[' ... ']#' is a block comment. It may span lines and CAN BE NESTED:
+  "#[ a #[ b ]# c ]#" is one comment. Use a depth counter.
+  A '#' or '@' inside a STRING is just part of the string.
+
+Whitespace (space, tab, newline) separates tokens.
+Anything else is an INVALID_CHAR error.
+Any letter outside an annotation, a lone '@', and a '-' not followed by '>' are
+INVALID_CHAR errors. Plain decimal numbers are not part of this language
+(see Rule 4 below).
+
+
+5. ERROR RECOVERY RULES FOR THIS TASK
+-------------------------------------
+Rule 1. Never stop. Scan to the end of the file. Collect errors in a
+        list and print them after all tokens.
+
+Rule 2. Report the position where the bad lexeme STARTS. Keep counting
+        line and column over every character you skip.
+
+Rule 3. Invalid-character run. If a character cannot start any token,
+        report an INVALID_CHAR error and keep consuming the following
+        characters that also cannot start a token. Report the whole run
+        as ONE error. Whitespace, or a character that can start a valid
+        token, ends the run.
+        Example,
+        input:     a-b ->
+        output:
+        Line:Col Token                Lexeme
+        1:5      ARROW                ->
+        --- ERRORS ---
+        1:1      INVALID_CHAR         [a-b]
+        --- end ---
+
+Rule 4. Malformed number. If a token starts with a digit and the whole
+        run of letters, digits and '_' is not a valid HEX or BIN
+        literal, consume that entire run and report it as
+        MALFORMED_NUMBER. This covers "0x" with no digits, "0b102",
+        "0x1G" and plain "42".
+        Example,
+        input:     0b102 0xAB
+        output:
+        Line:Col Token                Lexeme
+        1:7      HEX                  0xAB
+        --- ERRORS ---
+        1:1      MALFORMED_NUMBER     [0b102]
+        --- end ---
+
+Rule 5. Unterminated string. If the line (or the file) ends before the
+        closing quote, report UNTERMINATED_STRING at the OPENING quote.
+        The lexeme is the text from the opening quote to the end of the
+        line. Resume scanning on the next line.
+        Example,
+        input:
+        "hello
+        0xFF
+        output:
+        Line:Col Token                Lexeme
+        2:1      HEX                  0xFF
+        --- ERRORS ---
+        1:1      UNTERMINATED_STRING  ["hello]
+        --- end ---
+
+Rule 6. Unterminated comment. If the file ends while the comment depth
+        is above zero, report UNTERMINATED_COMMENT at the position of
+        the OUTERMOST '#['. The lexeme is just #[ . Everything after it
+        is swallowed.
+        Example,
+        input:     0x1 #[ open
+        output:
+        Line:Col Token                Lexeme
+        1:1      HEX                  0x1
+        --- ERRORS ---
+        1:5      UNTERMINATED_COMMENT [#[]
+        --- end ---
+
+Rule 7. Bad escape in a string. Report BAD_ESCAPE at the backslash. The
+        lexeme is the backslash plus the next character. Keep scanning
+        to the closing quote, then DISCARD the string: print no STRING
+        token. If the string has several bad escapes, report each one.
+        Example,
+        input:     "a\qb" 0x1
+        output:
+        Line:Col Token                Lexeme
+        1:8      HEX                  0x1
+        --- ERRORS ---
+        1:3      BAD_ESCAPE           [\q]
+        --- end ---
+
+Rule 8. Bad character literal. Any malformed char literal (empty, more
+        than one character, a bad escape, or a missing closing quote)
+        is reported as BAD_CHAR_LITERAL. The lexeme runs from the
+        opening quote through the next quote on the same line, or to
+        the end of the line if there is none. Resume right after the
+        lexeme.
+        Examples:   ''   gives ['']        'ab'  gives ['ab']
+                    'a   gives ['a]        '\q'  gives ['\q']
+
+Rule 9. A lexeme that caused an error produces no token. Never report
+        the same text twice.
+
+
+6. BUFFERED INPUT
+--------------------------
+Implement the two-buffer scheme with sentinels from the Dragon Book
+(Sec. 3.2, Fig. 3.3):
+  - two buffer halves, each ending with a sentinel EOF character
+  - a lexeme_begin pointer and a forward pointer
+  - retract() to step the forward pointer back by one character
+  - reload the other half when forward reaches a sentinel
+Copy characters into your own lexeme string as you advance, because a
+lexeme (for example a long string) can be longer than one buffer.
+The scanner must not look at the file any other way.
+
+
+7. CODE STRUCTURE
+--------------------------
+- Code must be properly indented
+- Code should not contain any unnecessary spaces or newlines
+- Each code fragment should be properly spaced. Example: 'a = 3 + 4', 'for (int i = 0; i < N; ++i) {' etc.
+
+
+8. TEST CASES
+-------------
+Save each input to a file, run your program on it, and compare with the
+expected output exactly (use diff).
+Note: In Test 3.3, line 2 begins with ONE space.
+
+TEST 3.1
+Input:
+@version "1.0" :: 'x' -> 0xFF
+0b1010 . .. ... :
+
+Expected output:
+1:1 ANNOT @version
+1:10 STRING "1.0"
+1:16 SCOPE ::
+1:19 CHAR 'x'
+1:23 ARROW ->
+1:26 HEX 0xFF
+2:1 BIN 0b1010
+2:8 DOT .
+2:10 RANGE ..
+2:13 ELLIPSIS ...
+2:17 COLON :
+--- ERRORS ---
+(none)
+--- end ---
+
+TEST 3.2
+Input:
+"a\"b" "tab\there" "" '\n' '\\' '\''
+"# not a comment @x" #real comment "ignored"
+@a@b
+
+Expected output:
+1:1 STRING "a\"b"
+1:8 STRING "tab\there"
+1:20 STRING ""
+1:23 CHAR '\n'
+1:28 CHAR '\\'
+1:33 CHAR '\''
+2:1 STRING "# not a comment @x"
+3:1 ANNOT @a
+3:3 ANNOT @b
+--- ERRORS ---
+(none)
+--- end ---
+
+TEST 3.3
+Input:
+@start #[ outer #[ inner ]# still outer
+ multi-line ]# 0x1F
+# whole line
+"end"
+
+Expected output:
+1:1 ANNOT @start
+2:16 HEX 0x1F
+4:1 STRING "end"
+--- ERRORS ---
+(none)
+--- end ---
+
+TEST 3.4
+Input:
+"abc
+'ab' 0x 0b102 42 @ - ->
+"bad\qesc" 0xAB
+
+Expected output:
+2:22 ARROW ->
+3:12 HEX 0xAB
+--- ERRORS ---
+1:1 UNTERMINATED_STRING ["abc]
+2:1 BAD_CHAR_LITERAL ['ab']
+2:6 MALFORMED_NUMBER [0x]
+2:9 MALFORMED_NUMBER [0b102]
+2:15 MALFORMED_NUMBER [42]
+2:18 INVALID_CHAR [@]
+2:20 INVALID_CHAR [-]
+3:5 BAD_ESCAPE [\q]
+--- end ---
+
+TEST 3.5
+Input:
+@a "a very long string literal that is definitely longer than any small buffer" 'z'
+0xFF #[ never closed
+0b1 "ignored"
+
+Expected output:
+1:1 ANNOT @a
+1:4 STRING "a very long string literal that is definitely longer than any small buffer"
+1:81 CHAR 'z'
+2:1 HEX 0xFF
+--- ERRORS ---
+2:6 UNTERMINATED_COMMENT [#[]
+--- end ---
+
+
+9. GRADING (100 points)
+-----------------------
+Test cases ............................................... 35
+    7 points per test, exact output match
+Code structure ........................................... 15
+Line/column tracking ..................................... 10
+Error reporting and recovery ............................. 25
+Buffered input ........................................... 15
