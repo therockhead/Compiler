@@ -37,13 +37,13 @@ every token, followed by a list of errors.
 -----------------------
 INT      =: [0-9]+ -> one or more digits. Leading zeros are allowed (007 is an INT).
 FLOAT    =: [0-9]+.[0-9]+ -> digits, then '.', then at least one digit (3.14).
-PLUS     =: '+'        
-MINUS    =: '-'   
-STAR     =: '*'        
+PLUS     =: '+'
+MINUS    =: '-'
+STAR     =: '*'
 SLASH    =: '/'
-PERCENT  =: '%'        
-CARET    =: '^'        
-LPAREN   =: '('        
+PERCENT  =: '%'
+CARET    =: '^'
+LPAREN   =: '('
 RPAREN   =: ')'
 
 Whitespace (space, tab, newline) separates tokens.
@@ -64,7 +64,7 @@ Rule 3. Invalid-character run. If a character cannot start any token,
         characters that also cannot start a token. Report the whole run
         as ONE error. Whitespace, or a character that can start a valid
         token, ends the run.
-        Example, 
+        Example,
         input:     3 ~~ + @4
         output:
         Line:Col Token        Lexeme
@@ -97,7 +97,7 @@ The scanner must not look at the file any other way.
 8. TEST CASES
 -------------
 Save each input to a file, run your program on it, and compare with the
-expected output exactly (use diff). 
+expected output exactly (use diff).
 Note: In Test 1.3, line 2 begins with two spaces.
 
 TEST 1.1
