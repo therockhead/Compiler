@@ -10,7 +10,7 @@ typedef struct invalid_char
 {
     int row;
     int col;
-    char ch;
+    string ch;
 } inv;
 
 void skipws(string &prog, int &start)
@@ -141,24 +141,32 @@ int main(int argc, char *argv[])
                 }
                 break;
             case '.':
-                inv_char.push_back({row, start, '.'});
+                inv_char.push_back({row, start, "."});
                 start++;
                 break;
             case '=':
-                inv_char.push_back({row, start, '='});
+                inv_char.push_back({row, start, "="});
                 start++;
                 break;
             case '$':
-                inv_char.push_back({row, start, '$'});
+                if (peek(prog, start) == '$') {
+                    inv_char.push_back({row, start, "$$"});
+                    start++;
+                }
+                else {
+                    inv_char.push_back({row, start, "$"});
+                }
                 start++;
                 break;
             default:
                 if (isalpha(prog[start]))
                 {
                     char curr = prog[start];
+
+                    inv_char.push_back({row, start, {curr}});
                     ++start;
-                    inv_char.push_back({row, start, curr});
-                    
+
+
                 }
                 else if (isdigit(prog[start]))
                 {
@@ -172,7 +180,7 @@ int main(int argc, char *argv[])
                         if (start + 1 < prog.length() && isdigit(peek(prog, start)))
                         {
                             token += advance(prog, start); // min 1
-                            while (start < prog.length() && isdigit(prog[start])) 
+                            while (start < prog.length() && isdigit(prog[start]))
                             {
                                 token+=advance(prog, start);
                             }
@@ -180,8 +188,8 @@ int main(int argc, char *argv[])
                     }
 
                     if (start < prog.length() && prog[start] == '.') {
+                        inv_char.push_back({row, start, "."});
                         start++;
-                        inv_char.push_back({row, start, '.'});
                     }
                 }
                 break;
@@ -189,15 +197,15 @@ int main(int argc, char *argv[])
 
             if (token != "") cout << row << ":" << start << " " << token << '\n';
 
-           
+
             token.clear();
         }
-         
+
     }
 
     cout << "--- ERRORS ---\n";
     for (auto it: inv_char) {
-        cout << it.row << ":" << it.col << " INVALID_CHAR" << " [" << it.ch << "] \n";
+        cout << it.row << ":" << it.col+1 << " INVALID_CHAR" << " [" << it.ch << "] \n";
     }
 
     cout << "--- end ---\n";
