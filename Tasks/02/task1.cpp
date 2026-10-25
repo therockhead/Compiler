@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <map>
 
 using namespace std;
 
@@ -12,6 +13,29 @@ typedef struct invalid_char
     int col;
     string ch;
 } inv;
+
+
+map<string, string> op = {
+    {"+", "PLUS"},
+    {"-", "MINUS"},
+    {"*", "STAR"},
+    {"/", "SLASH"},
+    {"%", "PERCENT"},
+    {"^", "CARET"},
+    {"(", "LPAREN"},
+    {")", "RPAREN"},
+    {"0", "INT"},
+    {"1", "INT"},
+    {"2", "INT"},
+    {"3", "INT"},
+    {"4", "INT"},
+    {"5", "INT"},
+    {"6", "INT"},
+    {"7", "INT"},
+    {"8", "INT"},
+    {"9", "INT"},
+};;
+
 
 void skipws(string &prog, int &start)
 {
@@ -67,6 +91,8 @@ int main(int argc, char *argv[])
     }
 
     string prog;
+    string token_name;
+
 
     int start = 0;
     string token = "";
@@ -74,9 +100,13 @@ int main(int argc, char *argv[])
     vector<inv> inv_char;
 
     int row = 0;
+    int col = 1;
     while (getline(inf, prog))
     {
+        token_name = "";
         start = 0;
+        col = 1;
+
         row++;
         while (start < prog.length())
         {
@@ -85,6 +115,7 @@ int main(int argc, char *argv[])
             switch (prog[start])
             {
             case '"':
+                col = start +1;
                 token = readString(prog, start);
                 break;
             case '{':
@@ -100,9 +131,13 @@ int main(int argc, char *argv[])
             case '/':
             case '^':
             case '*':
+                col=start+1;
+                token_name = op[token];
                 token += advance(prog, start);
+                token_name = op[token];
                 break;
             case '<':
+                col=start+1;
                 if (peek(prog, start) == '=')
                 {
                     token += advance(prog, start, 2);
@@ -122,8 +157,10 @@ int main(int argc, char *argv[])
                 }
                 break;
             case '>':
+                col=start+1;
                 if (peek(prog, start) == '=')
                 {
+
                     token += advance(prog, start);
                     token += advance(prog, start);
                 }
@@ -141,14 +178,17 @@ int main(int argc, char *argv[])
                 }
                 break;
             case '.':
+                col=start+1;
                 inv_char.push_back({row, start, "."});
                 start++;
                 break;
             case '=':
+                col=start+1;
                 inv_char.push_back({row, start, "="});
                 start++;
                 break;
             case '$':
+                col=start+1;
                 if (peek(prog, start) == '$') {
                     inv_char.push_back({row, start, "$$"});
                     start++;
@@ -159,6 +199,7 @@ int main(int argc, char *argv[])
                 start++;
                 break;
             default:
+                col=start+1;
                 if (isalpha(prog[start]))
                 {
                     char curr = prog[start];
@@ -174,6 +215,7 @@ int main(int argc, char *argv[])
                     while (start < prog.length() && isdigit(prog[start]))
                     {
                         token += advance(prog, start);
+                        token_name = "INT";
                     }
                     if (start < prog.length() && prog[start] == '.')
                     {
@@ -185,6 +227,7 @@ int main(int argc, char *argv[])
                                 token+=advance(prog, start);
                             }
                         }
+                        token_name="FLOAT";
                     }
 
                     if (start < prog.length() && prog[start] == '.') {
@@ -195,17 +238,21 @@ int main(int argc, char *argv[])
                 break;
             }
 
-            if (token != "") cout << row << ":" << start << " " << token << '\n';
+            if (token != "") cout << row << ":" << col << " " << token_name << " " << token << '\n';
 
 
             token.clear();
+            token_name.clear();
         }
 
     }
 
     cout << "--- ERRORS ---\n";
-    for (auto it: inv_char) {
-        cout << it.row << ":" << it.col+1 << " INVALID_CHAR" << " [" << it.ch << "] \n";
+    if (inv_char.size() == 0) cout << "(none)\n";
+    else {
+        for (auto it: inv_char) {
+           cout << it.row << ":" << it.col+1 << " INVALID_CHAR" << " [" << it.ch << "] \n";
+        }
     }
 
     cout << "--- end ---\n";
