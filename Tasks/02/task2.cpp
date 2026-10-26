@@ -202,12 +202,9 @@ int main(int argc, char *argv[])
                 col=start+1;
                 if (isalpha(prog[start]))
                 {
-                    char curr = prog[start];
-
-                    inv_char.push_back({row, start, {curr}});
-                    ++start;
-
-
+                    while(start <prog.length() && isalpha(prog[start])) {
+                        token += advance(prog, start);
+                    }
                 }
                 else if (isdigit(prog[start]))
                 {
