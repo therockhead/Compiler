@@ -13,11 +13,11 @@ typedef struct invalid_char
     int row;
     int col;
     string ch;
+    string name;
 } inv;
 
 set<string> keywords = {
-    "if", "else", "while", "for" , "return", "int", "float"
-};
+    "if", "else", "while", "for", "return", "int", "float"};
 
 map<string, string> op = {
     {"=", "ASSIGN"},
@@ -27,21 +27,22 @@ map<string, string> op = {
     {">=", "GE"},
     {"<", "LT"},
     {">", "GT"},
+    {"!", "NOT"},
+    {"&&", "AND"},
+    {"||", "OR"},
+    {";", "SEMI"},
+    {",", "COMMA"},
     {"{", "LBRACE"},
     {"}", "RBRACE"},
-    {"0", "INT"},
-    {"1", "INT"},
-    {"2", "INT"},
-    {"3", "INT"},
-    {"4", "INT"},
-    {"5", "INT"},
-    {"6", "INT"},
-    {"7", "INT"},
-    {"8", "INT"},
-    {"9", "INT"},
-};;
+    {"[", "LBRACKET"},
+    {"]", "RBRACKET"},
+};
 
 
+string str(int ch)
+{
+    return "" + ch;
+}
 void skipws(string &prog, int &start)
 {
     while (start < prog.length() && isspace(prog[start]))
@@ -98,7 +99,6 @@ int main(int argc, char *argv[])
     string prog;
     string token_name;
 
-
     int start = 0;
     string token = "";
 
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
             switch (prog[start])
             {
             case '"':
-                col = start +1;
+                col = start + 1;
                 token = readString(prog, start);
                 break;
             case '{':
@@ -130,135 +130,82 @@ int main(int argc, char *argv[])
             case '[':
             case ']':
             case ';':
-            case '+':
-            case '-':
-            case '%':
-            case '/':
-            case '^':
-            case '*':
-                col=start+1;
-                token_name = op[token];
+            case ',':
+                col = start + 1;
                 token += advance(prog, start);
                 token_name = op[token];
                 break;
             case '<':
-                col=start+1;
+            case '>':
+            case '!':
+            case '=':
+                col = start + 1;
                 if (peek(prog, start) == '=')
                 {
                     token += advance(prog, start, 2);
                 }
-                else if (peek(prog, start) == '<')
-                {
-                    token += advance(prog, start);
-                    token += advance(prog, start);
-                    if (peek(prog, start) == '=')
-                    {
-                        token += advance(prog, start);
-                    }
-                }
                 else
                 {
                     token += advance(prog, start);
                 }
+                token_name = op[token];
                 break;
-            case '>':
-                col=start+1;
-                if (peek(prog, start) == '=')
+            case '&':
+            case '|':
+                col = start + 1;
+                if (peek(prog, start) == prog[start])
                 {
-
-                    token += advance(prog, start);
-                    token += advance(prog, start);
-                }
-                else if (peek(prog, start) == '>')
-                {
-                    token += advance(prog, start);
-                    if (peek(prog, start) == '=')
-                    {
-                        token += advance(prog, start);
-                    }
+                    token += advance(prog, start, 2);
                 }
                 else
                 {
-                    token += advance(prog, start);
-                }
-                break;
-            case '.':
-                col=start+1;
-                inv_char.push_back({row, start, "."});
-                start++;
-                break;
-            case '=':
-                col=start+1;
-                inv_char.push_back({row, start, "="});
-                start++;
-                break;
-            case '$':
-                col=start+1;
-                if (peek(prog, start) == '$') {
-                    inv_char.push_back({row, start, "$$"});
+                    inv_char.push_back({row, start, string(1, prog[start]), "INCOMPLETE_OPERATOR"});
                     start++;
                 }
-                else {
-                    inv_char.push_back({row, start, "$"});
-                }
-                start++;
+                token_name = op[token];
                 break;
             default:
-                col=start+1;
-                if (isalpha(prog[start]))
+                col = start + 1;
+                if (isalpha(prog[start]) || prog[start] == '_')
                 {
-                    while(start <prog.length() && isalpha(prog[start])) {
+                    while (start < prog.length() && (isalpha(prog[start]) || prog[start] == '_' || (prog[start] >= '0' && prog[start] <= '9')))
+                    {
                         token += advance(prog, start);
                         token_name = "IDENT";
                     }
-                    if (keywords.find(token) != keywords.end()) {
+                    if (keywords.find(token) != keywords.end())
+                    {
                         token_name = "KEYWORD";
                     }
-                    
                 }
-                else if (isdigit(prog[start]))
+                else
                 {
-                    int temp = 0;
-                    while (start < prog.length() && isdigit(prog[start]))
+                    while (start < prog.length() && !isspace(prog[start]) && !isalpha(prog[start]))
                     {
                         token += advance(prog, start);
-                        token_name = "INT";
                     }
-                    if (start < prog.length() && prog[start] == '.')
-                    {
-                        if (start + 1 < prog.length() && isdigit(peek(prog, start)))
-                        {
-                            token += advance(prog, start); // min 1
-                            while (start < prog.length() && isdigit(prog[start]))
-                            {
-                                token+=advance(prog, start);
-                            }
-                        }
-                        token_name="FLOAT";
-                    }
-
-                    if (start < prog.length() && prog[start] == '.') {
-                        inv_char.push_back({row, start, "."});
-                        start++;
-                    }
+                    inv_char.push_back({row, start, token, "INVALID_CHAR"});
+                    token.clear();
                 }
                 break;
             }
 
-            if (token != "") cout << row << ":" << col << " " << token_name << " " << token << '\n';
-
+            if (token != "")
+                cout << row << ":" << col << " " << token_name << " " << token << '\n';
 
             token.clear();
             token_name.clear();
         }
-
     }
 
     cout << "--- ERRORS ---\n";
-    if (inv_char.size() == 0) cout << "(none)\n";
-    else {
-        for (auto it: inv_char) {
-           cout << it.row << ":" << it.col+1 << " INVALID_CHAR" << " [" << it.ch << "] \n";
+    if (inv_char.size() == 0)
+        cout << "(none)\n";
+    else
+    {
+        for (auto it : inv_char)
+        {
+            cout << it.row << ":" << it.col + 1 << " " << it.name << " [" << it.ch << "] \n";
         }
     }
 
