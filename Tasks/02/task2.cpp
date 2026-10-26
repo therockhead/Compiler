@@ -4,6 +4,7 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <set>
 
 using namespace std;
 
@@ -14,16 +15,20 @@ typedef struct invalid_char
     string ch;
 } inv;
 
+set<string> keywords = {
+    "if", "else", "while", "for" , "return", "int", "float"
+};
 
 map<string, string> op = {
-    {"+", "PLUS"},
-    {"-", "MINUS"},
-    {"*", "STAR"},
-    {"/", "SLASH"},
-    {"%", "PERCENT"},
-    {"^", "CARET"},
-    {"(", "LPAREN"},
-    {")", "RPAREN"},
+    {"=", "ASSIGN"},
+    {"==", "EQ"},
+    {"!=", "NEQ"},
+    {"<=", "LE"},
+    {">=", "GE"},
+    {"<", "LT"},
+    {">", "GT"},
+    {"{", "LBRACE"},
+    {"}", "RBRACE"},
     {"0", "INT"},
     {"1", "INT"},
     {"2", "INT"},
@@ -204,7 +209,12 @@ int main(int argc, char *argv[])
                 {
                     while(start <prog.length() && isalpha(prog[start])) {
                         token += advance(prog, start);
+                        token_name = "IDENT";
                     }
+                    if (keywords.find(token) != keywords.end()) {
+                        token_name = "KEYWORD";
+                    }
+                    
                 }
                 else if (isdigit(prog[start]))
                 {
