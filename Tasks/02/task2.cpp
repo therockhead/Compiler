@@ -38,11 +38,6 @@ map<string, string> op = {
     {"]", "RBRACKET"},
 };
 
-
-string str(int ch)
-{
-    return "" + ch;
-}
 void skipws(string &prog, int &start)
 {
     while (start < prog.length() && isspace(prog[start]))

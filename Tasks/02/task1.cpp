@@ -136,47 +136,6 @@ int main(int argc, char *argv[])
                 token += advance(prog, start);
                 token_name = op[token];
                 break;
-            case '<':
-                col=start+1;
-                if (peek(prog, start) == '=')
-                {
-                    token += advance(prog, start, 2);
-                }
-                else if (peek(prog, start) == '<')
-                {
-                    token += advance(prog, start);
-                    token += advance(prog, start);
-                    if (peek(prog, start) == '=')
-                    {
-                        token += advance(prog, start);
-                    }
-                }
-                else
-                {
-                    token += advance(prog, start);
-                }
-                break;
-            case '>':
-                col=start+1;
-                if (peek(prog, start) == '=')
-                {
-
-                    token += advance(prog, start);
-                    token += advance(prog, start);
-                }
-                else if (peek(prog, start) == '>')
-                {
-                    token += advance(prog, start);
-                    if (peek(prog, start) == '=')
-                    {
-                        token += advance(prog, start);
-                    }
-                }
-                else
-                {
-                    token += advance(prog, start);
-                }
-                break;
             case '.':
                 col=start+1;
                 inv_char.push_back({row, start, "."});
@@ -234,6 +193,15 @@ int main(int argc, char *argv[])
                         inv_char.push_back({row, start, "."});
                         start++;
                     }
+                }
+                else
+                {
+                    while (start < prog.length() && !isspace(prog[start]) && !isalpha(prog[start]))
+                    {
+                        token += advance(prog, start);
+                    }
+                    inv_char.push_back({row, start, token});
+                    token.clear();
                 }
                 break;
             }
