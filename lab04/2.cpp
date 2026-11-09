@@ -1,3 +1,6 @@
+/**
+ * CUSTOM FILE BUFFER READER BY RAIHAN SIR
+ */
 #include <iostream>
 #include <string>
 #include <fstream>
