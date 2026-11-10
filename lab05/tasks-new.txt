@@ -1,0 +1,7 @@
+.....HW......
+1. Fix infinite loop (advanced func e changed ana lagbe)
+2. ReadNumber implement korte hbe (floating point handle korte hobe)
+
+ques suggestions
+------------------
+- 
