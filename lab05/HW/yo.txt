@@ -1,0 +1,23 @@
+int temp = 0;
+                    while (start < prog.length() && isdigit(prog[start]))
+                    {
+                        token += advance(prog, start);
+                        token_name = "INT";
+                    }
+                    if (start < prog.length() && prog[start] == '.')
+                    {
+                        if (start + 1 < prog.length() && isdigit(peek(prog, start)))
+                        {
+                            token += advance(prog, start); // min 1
+                            while (start < prog.length() && isdigit(prog[start]))
+                            {
+                                token+=advance(prog, start);
+                            }
+                        }
+                        token_name="FLOAT";
+                    }
+
+                    if (start < prog.length() && prog[start] == '.') {
+                        inv_char.push_back({row, start, "."});
+                        start++;
+                    } 11.12
