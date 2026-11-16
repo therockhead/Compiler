@@ -32,6 +32,8 @@ enum TokenType {
     EQ,
     EQEQ,
     LTEQ,
+    LSHIFT,
+    RSHIFT,
     GTEQ,
     ID,
     UNKNOWN,
@@ -179,24 +181,91 @@ public:
                     token += advance();
                     if (peek() == '=') {
                         token += advance();
+                        tokens.push_back(
+                            Token{
+                                LTEQ,
+                                token,
+                                this->line,
+                                this->col
+                            }
+                        );
                     } else if (peek() == '<') {
                         token += advance();
+                        tokens.push_back(
+                            Token{
+                                LSHIFT,
+                                token,
+                                this->line,
+                                this->col
+                            }
+                        );
                     } else {
-                        // LT
+                        tokens.push_back(
+                            Token{
+                                LT,
+                                token,
+                                this->line,
+                                this->col
+                            }
+                        );
                     }
                     break;
                 case '>':
                     token += advance();
                     if (peek() == '=') {
                         token += advance();
+                        tokens.push_back(
+                            Token{
+                                GTEQ,
+                                token,
+                                this->line,
+                                this->col
+                            }
+                        );
                     } else if (peek() == '>') {
                         token += advance();
+                        tokens.push_back(
+                            Token{
+                                RSHIFT,
+                                token,
+                                this->line,
+                                this->col
+                            }
+                        );
+                    }
+                    else {
+                        tokens.push_back(
+                            Token{
+                                GT,
+                                token,
+                                this->line,
+                                this->col
+                            }
+                        );
                     }
                     break;
                 case '=':
                     token += advance();
                     if (peek() == '=') {
                         token += advance();
+                        tokens.push_back(
+                            Token{
+                                EQEQ,
+                                token,
+                                this->line,
+                                this->col
+                            }
+                        );
+                    }
+                    else {
+                        tokens.push_back(
+                            Token{
+                                EQ,
+                                token,
+                                this->line,
+                                this->col
+                            }
+                        );
                     }
                     break;
                 default:
@@ -213,17 +282,18 @@ public:
                     } else {
                         //cout << "Error: unknown token '" << advance() << "'\n";
                         advance();
+                            tokens.push_back(Token{
+                            UNKNOWN,
+                            token,
+                            this->line,
+                            this->col
+                        });
                     }
                     break;
             }
            
             if (!token.empty()) {
-                tokens.push_back(Token{
-                    UNKNOWN,
-                    token,
-                    this->line,
-                    this->col
-                });
+                
             }
             token.clear();
         }
