@@ -41,7 +41,7 @@ public:
 
   void skipws(int &start)
   {
-    while (start < this->content.length() && isspace(this->content[start]))
+    while (this->cur < this->end && isspace(this->content[start]))
     {
       ++start;
     }
