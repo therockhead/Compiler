@@ -5,8 +5,45 @@
 #include <cstdlib>
 #include <cstring>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
+
+
+enum TokenType {
+    INT,
+    FLOAT,
+    STRING,
+    LPAREN,
+    RPAREN,
+    LSQRUARE,
+    RSQUARE,
+    LCURLY,
+    RCURLY,
+    PLUS,
+    MINUS,
+    STAR,
+    SLASH,
+    SEMICOLON,
+    LT,
+    LTLT,
+    GT,
+    GTGT,
+    EQ,
+    EQEQ,
+    LTEQ,
+    GTEQ,
+    ID,
+    UNKNOWN,
+};
+
+
+struct Token {
+    TokenType type;
+    string _token;
+    int line, col;
+};
+
 
 class Tokenizer {
 public:
@@ -27,6 +64,7 @@ public:
         fin.read(this->content, fsize);
        
         this->content[fsize] = '\0';
+        cout << this->content << '\n';
        
         fin.close();
     }
@@ -34,44 +72,53 @@ public:
     ~Tokenizer() {
         delete[] this->content;
     }
+       
+    bool is_eof() {
+        return this->cur >= this->end;
+    }
    
     char peek(int pos = 0) {
-        if (pos > this->end) {
+        if (this->cur+pos >= this->end) {
             return '\0';
         }
-        return this->content[cur + pos];
+        return this->content[this->cur + pos];
     }
    
-    char advance(int pos = 1) {
-        if (pos > this->end) {
-            return '\0';
+    string advance(int pos = 1) {
+        if (!is_eof()) {
+            return "\0";
         }
-        this->cur += pos;
-        return this->content[this->cur - pos];
+        int mv = min(pos, this->end-this->cur);
+        this->cur += mv;
+        this->col += mv;
+        return string(this->content).substr(this->cur-pos, mv);
     }
    
-    char skipws() {
-        while (this->cur < this->end &&
-               isspace(this->content[this->cur])) {
-            ++this->cur;
+    void skipws() {
+        while (!is_eof() &&
+               isspace(peek())) {
+            if (peek() == '\n') {
+                ++this->line;
+                this->col = 1;
+            }
+            advance();
         }
     }
        
        
-    string readString() {
-        string str = "";
-        if (this->content[this->cur] != '"') {
-            cerr << "Error: string does not this->cur with '\"'\n";
+    string read_string() {
+        if (peek() != '"') {
+            cerr << "Error: string does not start with '\"'\n";
             return "";
         }
-        advance(); // read the first "
        
-        while (this->cur < this->end
-               && peek() != '"') {
+        advance(); // read the first "
+        string str = "";
+        while (!is_eof() && peek() != '"') {
             str += advance();
         }
        
-        if (this->cur >= this->end) {
+        if (is_eof()) {
             cerr << "Error: unterminated string\n";
             return "";
         }
@@ -79,20 +126,45 @@ public:
         advance(); /// read ending "
         return str;
     }
-
+       
+    string read_number() {
+        return "";
+    }
    
-    vector<string> tokenize() {
-        vector<string> tokens;
+    string read_identifier() {
+        return "";
+    }
+   
+    vector<Token> tokenize() {
+        cout << this->content << '\n';
+        vector<Token> tokens;
        
         string token = "";
-        while (this->cur < this->end) {
+        while (!is_eof() || peek() != '\0') {
             skipws();
-           
             switch (peek()) {
                 case '"':
-                    token = readString();
+                    token = read_string();
+                    tokens.push_back(
+                        Token{
+                            STRING,
+                            token,
+                            this->line,
+                            this->col
+                        }
+                    );
                     break;
                 case '{':
+                    token += advance();
+                    tokens.push_back(
+                        Token{
+                            LCURLY,
+                            token,
+                            this->line,
+                            this->col
+                        }
+                    );
+                    break;
                 case '}':
                 case '(':
                 case ')':
@@ -104,67 +176,70 @@ public:
                     token += advance();
                     break;
                 case '<':
-                    if (peek(1) == '=') {
+                    token += advance();
+                    if (peek() == '=') {
                         token += advance();
+                    } else if (peek() == '<') {
                         token += advance();
-                    } else if (peek(1) == '<') {
-                        token += advance();
-                        token += advance();
-                        if (peek() == '=') {
-                            token += advance();
-                        }
                     } else {
-                        token += advance();
+                        // LT
                     }
                     break;
                 case '>':
-                    if (peek(1) == '=') {
+                    token += advance();
+                    if (peek() == '=') {
                         token += advance();
-                        token += advance();
-                    } else if (peek(1) == '>') {
-                        token += advance();
-                        if (peek(1) == '=') {
-                            token += advance();
-                        }
-                    } else {
+                    } else if (peek() == '>') {
                         token += advance();
                     }
                     break;
                 case '=':
-                    if (peek(1) == '=') {
-                        token += advance();
-                        token += advance();
-                    } else {
+                    token += advance();
+                    if (peek() == '=') {
                         token += advance();
                     }
                     break;
                 default:
-                    if (isalpha(this->content[this->cur])) {
-                        while (this->cur < this->end &&
-                               isalpha(this->content[this->cur])){
+                    if (isalpha(peek())) {
+                        while (!is_eof() &&
+                               isalpha(peek())){
                             token += advance();
                         }
-                    } else if (isdigit(this->content[this->cur])) {
-                        while (this->cur < this->end &&
-                               isdigit(this->content[this->cur])){
+                    } else if (isdigit(peek())) {
+                        while (!is_eof() &&
+                               isdigit(peek())){
                             token += advance();
                         }
+                    } else {
+                        //cout << "Error: unknown token '" << advance() << "'\n";
+                        advance();
                     }
                     break;
             }
-            tokens.push_back(token);
+           
+            if (!token.empty()) {
+                tokens.push_back(Token{
+                    UNKNOWN,
+                    token,
+                    this->line,
+                    this->col
+                });
+            }
             token.clear();
         }
     }
    
 private:
-    char *content{ nullptr };
-    int cur, end;
+    char *content = NULL;
+    int cur = 0;
+    int end = 0;
+    int line = 1, col = 1;
 };
 
 int main(int argc, char *argv[]) {
     Tokenizer tok(argv[1]);
    
+    /*
     vector<string> tokens = tok.tokenize();
    
     for (int i = 0; i < tokens.size(); ++i) {
